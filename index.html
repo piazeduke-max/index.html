@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кнопка-шар</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #1a1a2e;
+            overflow: hidden;
+        }
+        canvas {
+            border: 3px solid #333;
+            border-radius: 12px;
+            background: #87CEEB;
+            width: auto;
+            height: 96vh;
+            aspect-ratio: 400 / 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="game" width="400" height="700"></canvas>
+
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+
+        const W = 400;
+        const H = 700;
+        const GROUND = 620;
+        const R = 90;
+        const CX = W / 2;
+
+        let isPressed = false;
+        let pressTimer = 0;
+        let offsetY = 0;
+        let targetOffsetY = 0;
+
+        function drawCloud(x, y, s) {
+            ctx.beginPath();
+            ctx.arc(x, y, s * 0.6, 0, Math.PI * 2);
+            ctx.arc(x + s * 0.6, y - s * 0.2, s * 0.5, 0, Math.PI * 2);
+            ctx.arc(x + s * 1.2, y, s * 0.5, 0, Math.PI * 2);
+            ctx.arc(x + s * 0.7, y + s * 0.2, s * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Небо
+            let g = ctx.createLinearGradient(0, 0, 0, GROUND);
+            g.addColorStop(0, '#4A90D9');
+            g.addColorStop(0.5, '#87CEEB');
+            g.addColorStop(1, '#B5E8F7');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, W, GROUND);
+
+            // Солнце
+            ctx.shadowColor = '#FFE066';
+            ctx.shadowBlur = 60;
+            ctx.beginPath();
+            ctx.arc(340, 70, 35, 0, Math.PI * 2);
+            ctx.fillStyle = '#FFF9E6';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            ctx.arc(332, 60, 8, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.fill();
+
+            // Облака
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            drawCloud(60, 90, 45);
+            drawCloud(200, 60, 40);
+            drawCloud(320, 120, 42);
+            drawCloud(30, 160, 28);
+            drawCloud(360, 55, 30);
+
+            // Холмы
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.15)';
+            ctx.beginPath();
+            ctx.moveTo(0, GROUND);
+            for (let i = 0; i <= W; i += 2) {
+                let y = GROUND - 18 - Math.sin(i * 0.008 + 0.5) * 25 - Math.sin(i * 0.015 + 2.0) * 15;
+                ctx.lineTo(i, y);
+            }
+            ctx.lineTo(W, GROUND);
+            ctx.closePath();
+            ctx.fill();
+
+            // Земля
+            let g2 = ctx.createLinearGradient(0, GROUND, 0, H);
+            g2.addColorStop(0, '#66BB6A');
+            g2.addColorStop(0.3, '#4CAF50');
+            g2.addColorStop(0.7, '#388E3C');
+            g2.addColorStop(1, '#1B5E20');
+            ctx.fillStyle = g2;
+            ctx.fillRect(0, GROUND, W, H - GROUND);
+
+            // Трава
+            ctx.strokeStyle = '#388E3C';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < W; i += 7) {
+                let h = 4 + Math.sin(i * 0.18 + 0.5) * 3;
+                ctx.beginPath();
+                ctx.moveTo(i, GROUND);
+                ctx.lineTo(i + 1.5, GROUND - h);
+                ctx.stroke();
+            }
+
+            // ---- КНОПКА-ШАР С УЛУЧШЕННОЙ ТЕКСТУРОЙ ----
+
+            offsetY += (targetOffsetY - offsetY) * 0.2;
+
+            if (isPressed) {
+                pressTimer++;
+                if (pressTimer > 12) {
+                    isPressed = false;
+                    pressTimer = 0;
+                    targetOffsetY = 0;
+                }
+            }
+
+            const CY = (H / 2) + offsetY;
+            const pressOffset = offsetY / 15; // 0..1
+
+            // ---- ТЕНЬ ПОД КНОПКОЙ ----
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+
+            // Тень на земле (увеличивается при нажатии)
+            let shadowScale = 0.5 + pressOffset * 0.3;
+            let shadowAlpha = 0.1 + pressOffset * 0.15;
+            ctx.beginPath();
+            ctx.ellipse(CX, GROUND + 6 + offsetY * 0.1, R * shadowScale, 6 + offsetY * 0.05, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,' + shadowAlpha + ')';
+            ctx.fill();
+
+            // ---- ОСНОВНАЯ ЧАСТЬ КНОПКИ (объёмная) ----
+
+            // Внешняя обводка (как рамка кнопки)
+            ctx.shadowBlur = 0;
+            let borderGrad = ctx.createRadialGradient(CX, CY, R * 0.8, CX, CY, R + 4);
+            borderGrad.addColorStop(0, 'rgba(60,60,60,0)');
+            borderGrad.addColorStop(0.7, 'rgba(60,60,60,0)');
+            borderGrad.addColorStop(1, 'rgba(40,40,40,0.3)');
+            ctx.beginPath();
+            ctx.arc(CX, CY, R + 4, 0, Math.PI * 2);
+            ctx.fillStyle = borderGrad;
+            ctx.fill();
+
+            // Основной градиент кнопки (металлический/стеклянный эффект)
+            ctx.shadowColor = 'rgba(0,0,0,0.15)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 4 + pressOffset * 2;
+
+            let grad = ctx.createRadialGradient(
+                CX - R * 0.3, CY - R * 0.3, R * 0.1,
+                CX, CY, R
+            );
+
+            // Цвета при нажатии становятся темнее
+            let bright1 = 1 - pressOffset * 0.15;
+            let bright2 = 1 - pressOffset * 0.2;
+            let bright3 = 1 - pressOffset * 0.25;
+
+            grad.addColorStop(0, `rgb(${230 * bright1}, ${230 * bright1}, ${235 * bright1})`);
+            grad.addColorStop(0.15, `rgb(${210 * bright1}, ${210 * bright1}, ${215 * bright1})`);
+            grad.addColorStop(0.4, `rgb(${185 * bright2}, ${185 * bright2}, ${190 * bright2})`);
+            grad.addColorStop(0.7, `rgb(${155 * bright2}, ${155 * bright2}, ${160 * bright2})`);
+            grad.addColorStop(0.85, `rgb(${125 * bright3}, ${125 * bright3}, ${130 * bright3})`);
+            grad.addColorStop(1, `rgb(${95 * bright3}, ${95 * bright3}, ${100 * bright3})`);
+
+            ctx.beginPath();
+            ctx.arc(CX, CY, R, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // ---- ОБОДОК КНОПКИ (блик по краю) ----
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+
+            // Внутренняя обводка
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(CX, CY, R - 3, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(CX, CY, R - 6, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // ---- БЛИКИ (световые отражения) ----
+            ctx.shadowBlur = 0;
+
+            // Основной блик (сверху-слева)
+            let grad2 = ctx.createRadialGradient(
+                CX - R * 0.35, CY - R * 0.4, R * 0.05,
+                CX - R * 0.25, CY - R * 0.3, R * 0.4
+            );
+            grad2.addColorStop(0, `rgba(255,255,255,${0.5 - pressOffset * 0.2})`);
+            grad2.addColorStop(0.5, `rgba(255,255,255,${0.2 - pressOffset * 0.1})`);
+            grad2.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.beginPath();
+            ctx.arc(CX, CY, R, 0, Math.PI * 2);
+            ctx.fillStyle = grad2;
+            ctx.fill();
+
+            // Маленький яркий блик
+            ctx.beginPath();
+            ctx.arc(CX - R * 0.3, CY - R * 0.35, R * 0.12, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${0.6 - pressOffset * 0.3})`;
+            ctx.fill();
+
+            // Второй маленький блик
+            ctx.beginPath();
+            ctx.arc(CX - R * 0.2, CY - R * 0.5, R * 0.06, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${0.3 - pressOffset * 0.15})`;
+            ctx.fill();
+
+            // ---- БЛИК СНИЗУ (отражение от земли) ----
+            let grad3 = ctx.createRadialGradient(
+                CX + R * 0.2, CY + R * 0.6, R * 0.05,
+                CX + R * 0.1, CY + R * 0.5, R * 0.3
+            );
+            grad3.addColorStop(0, `rgba(100,180,100,${0.08 - pressOffset * 0.04})`);
+            grad3.addColorStop(1, 'rgba(100,180,100,0)');
+            ctx.beginPath();
+            ctx.arc(CX, CY, R, 0, Math.PI * 2);
+            ctx.fillStyle = grad3;
+            ctx.fill();
+
+            // ---- ЭФФЕКТ НАЖАТИЯ (дополнительная тень внутри) ----
+            if (isPressed) {
+                let grad4 = ctx.createRadialGradient(
+                    CX, CY + R * 0.2, R * 0.1,
+                    CX, CY, R
+                );
+                grad4.addColorStop(0, 'rgba(0,0,0,0)');
+                grad4.addColorStop(0.6, 'rgba(0,0,0,0)');
+                grad4.addColorStop(1, 'rgba(0,0,0,0.08)');
+                ctx.beginPath();
+                ctx.arc(CX, CY, R, 0, Math.PI * 2);
+                ctx.fillStyle = grad4;
+                ctx.fill();
+            }
+
+            // ---- ТЕКСТ НА КНОПКЕ ----
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetY = 0;
+
+            // Тень текста
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.font = 'bold 22px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('КЛИК', CX + 1, CY + 2 + offsetY * 0.02);
+
+            // Основной текст
+            let textBright = 1 - pressOffset * 0.15;
+            ctx.fillStyle = `rgba(50,50,55,${0.7 * textBright})`;
+            ctx.font = 'bold 22px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('КЛИК', CX, CY + offsetY * 0.02);
+
+            // Блик на тексте
+            ctx.fillStyle = `rgba(255,255,255,${0.15 - pressOffset * 0.08})`;
+            ctx.font = 'bold 22px Arial';
+            ctx.fillText('КЛИК', CX - 1, CY - 1 + offsetY * 0.02);
+
+            // ---- ИНДИКАЦИЯ НАЖАТИЯ (маленькая вспышка) ----
+            if (isPressed) {
+                ctx.strokeStyle = `rgba(255,255,255,${0.1 - pressTimer * 0.008})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(CX, CY, R + 8 + pressTimer * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        // ============================================================
+        //  ОБРАБОТЧИК КЛИКОВ
+        // ============================================================
+
+        function handleClick(e) {
+            const rect = canvas.getBoundingClientRect();
+
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const mouseX = (clientX - rect.left) * scaleX;
+            const mouseY = (clientY - rect.top) * scaleY;
+
+            const CY = (H / 2) + offsetY;
+            const dx = mouseX - CX;
+            const dy = mouseY - CY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist <= R * 1.2) {
+                isPressed = true;
+                pressTimer = 0;
+                targetOffsetY = 15;
+
+                canvas.style.transition = 'transform 0.05s';
+                canvas.style.transform = 'translate(' + (Math.random() * 4 - 2) + 'px, ' + (Math.random() * 4 - 2) + 'px)';
+                setTimeout(() => {
+                    canvas.style.transform = 'translate(0,0)';
+                }, 80);
+
+                console.log('Кнопка нажата!');
+            }
+        }
+
+        // ============================================================
+        //  ЗАПУСК
+        // ============================================================
+
+        canvas.addEventListener('click', handleClick);
+        canvas.addEventListener('touchstart', handleClick, { passive: false });
+
+        function loop() {
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        loop();
+
+        console.log('Кнопка-шар с нормальной текстурой!');
+    </script>
+</body>
+</html>
