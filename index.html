@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кнопка-шар</title>
+    <title>Мангал с шашлыком</title>
     <style>
         * {
             margin: 0;
@@ -25,7 +25,6 @@
             width: auto;
             height: 96vh;
             aspect-ratio: 400 / 700;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -40,27 +39,11 @@
         const W = 400;
         const H = 700;
         const GROUND = 620;
-        const R = 90;
-        const CX = W / 2;
-
-        let isPressed = false;
-        let pressTimer = 0;
-        let offsetY = 0;
-        let targetOffsetY = 0;
-
-        function drawCloud(x, y, s) {
-            ctx.beginPath();
-            ctx.arc(x, y, s * 0.6, 0, Math.PI * 2);
-            ctx.arc(x + s * 0.6, y - s * 0.2, s * 0.5, 0, Math.PI * 2);
-            ctx.arc(x + s * 1.2, y, s * 0.5, 0, Math.PI * 2);
-            ctx.arc(x + s * 0.7, y + s * 0.2, s * 0.4, 0, Math.PI * 2);
-            ctx.fill();
-        }
 
         function draw() {
             ctx.clearRect(0, 0, W, H);
 
-            // Небо
+            // ========== НЕБО ==========
             let g = ctx.createLinearGradient(0, 0, 0, GROUND);
             g.addColorStop(0, '#4A90D9');
             g.addColorStop(0.5, '#87CEEB');
@@ -68,7 +51,7 @@
             ctx.fillStyle = g;
             ctx.fillRect(0, 0, W, GROUND);
 
-            // Солнце
+            // ========== СОЛНЦЕ ==========
             ctx.shadowColor = '#FFE066';
             ctx.shadowBlur = 60;
             ctx.beginPath();
@@ -81,7 +64,7 @@
             ctx.fillStyle = 'rgba(255,255,255,0.5)';
             ctx.fill();
 
-            // Облака
+            // ========== ОБЛАКА ==========
             ctx.shadowBlur = 0;
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
             drawCloud(60, 90, 45);
@@ -90,19 +73,7 @@
             drawCloud(30, 160, 28);
             drawCloud(360, 55, 30);
 
-            // Холмы
-            ctx.fillStyle = 'rgba(76, 175, 80, 0.15)';
-            ctx.beginPath();
-            ctx.moveTo(0, GROUND);
-            for (let i = 0; i <= W; i += 2) {
-                let y = GROUND - 18 - Math.sin(i * 0.008 + 0.5) * 25 - Math.sin(i * 0.015 + 2.0) * 15;
-                ctx.lineTo(i, y);
-            }
-            ctx.lineTo(W, GROUND);
-            ctx.closePath();
-            ctx.fill();
-
-            // Земля
+            // ========== ЗЕМЛЯ ==========
             let g2 = ctx.createLinearGradient(0, GROUND, 0, H);
             g2.addColorStop(0, '#66BB6A');
             g2.addColorStop(0.3, '#4CAF50');
@@ -111,7 +82,7 @@
             ctx.fillStyle = g2;
             ctx.fillRect(0, GROUND, W, H - GROUND);
 
-            // Трава
+            // ========== ТРАВА ==========
             ctx.strokeStyle = '#388E3C';
             ctx.lineWidth = 2;
             for (let i = 0; i < W; i += 7) {
@@ -122,230 +93,245 @@
                 ctx.stroke();
             }
 
-            // ---- КНОПКА-ШАР С УЛУЧШЕННОЙ ТЕКСТУРОЙ ----
+            // ========== МАНГАЛ ==========
+            const mx = W / 2;
+            const my = GROUND - 10;
 
-            offsetY += (targetOffsetY - offsetY) * 0.2;
-
-            if (isPressed) {
-                pressTimer++;
-                if (pressTimer > 12) {
-                    isPressed = false;
-                    pressTimer = 0;
-                    targetOffsetY = 0;
-                }
-            }
-
-            const CY = (H / 2) + offsetY;
-            const pressOffset = offsetY / 15; // 0..1
-
-            // ---- ТЕНЬ ПОД КНОПКОЙ ----
+            // Ножки мангала
+            ctx.fillStyle = '#4A4A4A';
             ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
+            // Левая ножка
+            ctx.fillRect(mx - 70, my + 5, 8, 30);
+            // Правая ножка
+            ctx.fillRect(mx + 62, my + 5, 8, 30);
+            // Задняя левая ножка
+            ctx.fillRect(mx - 55, my + 8, 6, 25);
+            // Задняя правая ножка
+            ctx.fillRect(mx + 49, my + 8, 6, 25);
 
-            // Тень на земле (увеличивается при нажатии)
-            let shadowScale = 0.5 + pressOffset * 0.3;
-            let shadowAlpha = 0.1 + pressOffset * 0.15;
+            // Корпус мангала (основание)
+            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 4;
+            ctx.fillStyle = '#3D3D3D';
             ctx.beginPath();
-            ctx.ellipse(CX, GROUND + 6 + offsetY * 0.1, R * shadowScale, 6 + offsetY * 0.05, 0, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,' + shadowAlpha + ')';
+            ctx.roundRect(mx - 75, my - 5, 150, 18, 4);
             ctx.fill();
 
-            // ---- ОСНОВНАЯ ЧАСТЬ КНОПКИ (объёмная) ----
-
-            // Внешняя обводка (как рамка кнопки)
+            // Бортик мангала (передний)
             ctx.shadowBlur = 0;
-            let borderGrad = ctx.createRadialGradient(CX, CY, R * 0.8, CX, CY, R + 4);
-            borderGrad.addColorStop(0, 'rgba(60,60,60,0)');
-            borderGrad.addColorStop(0.7, 'rgba(60,60,60,0)');
-            borderGrad.addColorStop(1, 'rgba(40,40,40,0.3)');
+            ctx.fillStyle = '#5A5A5A';
             ctx.beginPath();
-            ctx.arc(CX, CY, R + 4, 0, Math.PI * 2);
-            ctx.fillStyle = borderGrad;
+            ctx.roundRect(mx - 75, my - 20, 150, 18, 4);
             ctx.fill();
 
-            // Основной градиент кнопки (металлический/стеклянный эффект)
-            ctx.shadowColor = 'rgba(0,0,0,0.15)';
-            ctx.shadowBlur = 20;
-            ctx.shadowOffsetY = 4 + pressOffset * 2;
-
-            let grad = ctx.createRadialGradient(
-                CX - R * 0.3, CY - R * 0.3, R * 0.1,
-                CX, CY, R
-            );
-
-            // Цвета при нажатии становятся темнее
-            let bright1 = 1 - pressOffset * 0.15;
-            let bright2 = 1 - pressOffset * 0.2;
-            let bright3 = 1 - pressOffset * 0.25;
-
-            grad.addColorStop(0, `rgb(${230 * bright1}, ${230 * bright1}, ${235 * bright1})`);
-            grad.addColorStop(0.15, `rgb(${210 * bright1}, ${210 * bright1}, ${215 * bright1})`);
-            grad.addColorStop(0.4, `rgb(${185 * bright2}, ${185 * bright2}, ${190 * bright2})`);
-            grad.addColorStop(0.7, `rgb(${155 * bright2}, ${155 * bright2}, ${160 * bright2})`);
-            grad.addColorStop(0.85, `rgb(${125 * bright3}, ${125 * bright3}, ${130 * bright3})`);
-            grad.addColorStop(1, `rgb(${95 * bright3}, ${95 * bright3}, ${100 * bright3})`);
-
+            // Бортик мангала (задний)
+            ctx.fillStyle = '#4A4A4A';
             ctx.beginPath();
-            ctx.arc(CX, CY, R, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
+            ctx.roundRect(mx - 70, my - 25, 140, 10, 3);
             ctx.fill();
 
-            // ---- ОБОДОК КНОПКИ (блик по краю) ----
+            // Внутренняя часть (угли)
             ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
-
-            // Внутренняя обводка
-            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(CX, CY, R - 3, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.arc(CX, CY, R - 6, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // ---- БЛИКИ (световые отражения) ----
-            ctx.shadowBlur = 0;
-
-            // Основной блик (сверху-слева)
-            let grad2 = ctx.createRadialGradient(
-                CX - R * 0.35, CY - R * 0.4, R * 0.05,
-                CX - R * 0.25, CY - R * 0.3, R * 0.4
-            );
-            grad2.addColorStop(0, `rgba(255,255,255,${0.5 - pressOffset * 0.2})`);
-            grad2.addColorStop(0.5, `rgba(255,255,255,${0.2 - pressOffset * 0.1})`);
-            grad2.addColorStop(1, 'rgba(255,255,255,0)');
-            ctx.beginPath();
-            ctx.arc(CX, CY, R, 0, Math.PI * 2);
-            ctx.fillStyle = grad2;
-            ctx.fill();
-
-            // Маленький яркий блик
-            ctx.beginPath();
-            ctx.arc(CX - R * 0.3, CY - R * 0.35, R * 0.12, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255,${0.6 - pressOffset * 0.3})`;
-            ctx.fill();
-
-            // Второй маленький блик
-            ctx.beginPath();
-            ctx.arc(CX - R * 0.2, CY - R * 0.5, R * 0.06, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255,255,255,${0.3 - pressOffset * 0.15})`;
-            ctx.fill();
-
-            // ---- БЛИК СНИЗУ (отражение от земли) ----
-            let grad3 = ctx.createRadialGradient(
-                CX + R * 0.2, CY + R * 0.6, R * 0.05,
-                CX + R * 0.1, CY + R * 0.5, R * 0.3
-            );
-            grad3.addColorStop(0, `rgba(100,180,100,${0.08 - pressOffset * 0.04})`);
-            grad3.addColorStop(1, 'rgba(100,180,100,0)');
-            ctx.beginPath();
-            ctx.arc(CX, CY, R, 0, Math.PI * 2);
+            let grad3 = ctx.createRadialGradient(mx, my + 2, 10, mx, my + 2, 60);
+            grad3.addColorStop(0, '#FF4500');
+            grad3.addColorStop(0.3, '#FF6B00');
+            grad3.addColorStop(0.6, '#CC3300');
+            grad3.addColorStop(0.8, '#8B0000');
+            grad3.addColorStop(1, '#2A0000');
             ctx.fillStyle = grad3;
+            ctx.beginPath();
+            ctx.ellipse(mx, my + 2, 65, 18, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // ---- ЭФФЕКТ НАЖАТИЯ (дополнительная тень внутри) ----
-            if (isPressed) {
-                let grad4 = ctx.createRadialGradient(
-                    CX, CY + R * 0.2, R * 0.1,
-                    CX, CY, R
-                );
-                grad4.addColorStop(0, 'rgba(0,0,0,0)');
-                grad4.addColorStop(0.6, 'rgba(0,0,0,0)');
-                grad4.addColorStop(1, 'rgba(0,0,0,0.08)');
+            // Угли (детали)
+            for (let i = 0; i < 20; i++) {
+                let x = mx - 50 + Math.random() * 100;
+                let y = my - 2 + Math.random() * 12;
+                let r = 3 + Math.random() * 6;
+                let alpha = 0.4 + Math.random() * 0.6;
+                let red = 100 + Math.random() * 155;
+                ctx.fillStyle = `rgba(${red}, ${30 + Math.random() * 40}, 0, ${alpha})`;
                 ctx.beginPath();
-                ctx.arc(CX, CY, R, 0, Math.PI * 2);
-                ctx.fillStyle = grad4;
+                ctx.arc(x, y, r, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // ---- ТЕКСТ НА КНОПКЕ ----
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
-
-            // Тень текста
-            ctx.fillStyle = 'rgba(0,0,0,0.08)';
-            ctx.font = 'bold 22px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('КЛИК', CX + 1, CY + 2 + offsetY * 0.02);
-
-            // Основной текст
-            let textBright = 1 - pressOffset * 0.15;
-            ctx.fillStyle = `rgba(50,50,55,${0.7 * textBright})`;
-            ctx.font = 'bold 22px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('КЛИК', CX, CY + offsetY * 0.02);
-
-            // Блик на тексте
-            ctx.fillStyle = `rgba(255,255,255,${0.15 - pressOffset * 0.08})`;
-            ctx.font = 'bold 22px Arial';
-            ctx.fillText('КЛИК', CX - 1, CY - 1 + offsetY * 0.02);
-
-            // ---- ИНДИКАЦИЯ НАЖАТИЯ (маленькая вспышка) ----
-            if (isPressed) {
-                ctx.strokeStyle = `rgba(255,255,255,${0.1 - pressTimer * 0.008})`;
-                ctx.lineWidth = 2;
+            // Огоньки
+            for (let i = 0; i < 8; i++) {
+                let x = mx - 40 + Math.random() * 80;
+                let y = my - 5 - Math.random() * 15;
+                let r = 1 + Math.random() * 4;
+                let alpha = 0.3 + Math.random() * 0.6;
+                ctx.fillStyle = `rgba(255, 200, 50, ${alpha})`;
+                ctx.shadowColor = 'rgba(255, 200, 50, 0.3)';
+                ctx.shadowBlur = 15;
                 ctx.beginPath();
-                ctx.arc(CX, CY, R + 8 + pressTimer * 1.5, 0, Math.PI * 2);
-                ctx.stroke();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
             }
+            ctx.shadowBlur = 0;
+
+            // ========== ШАШЛЫКИ ==========
+
+            // Шампур 1 (левый)
+            drawShashlik(mx - 30, my - 65, 0);
+
+            // Шампур 2 (центральный)
+            drawShashlik(mx + 5, my - 70, 1);
+
+            // Шампур 3 (правый)
+            drawShashlik(mx + 40, my - 65, 2);
+
+            // ========== ДЫМ ==========
+            ctx.shadowBlur = 0;
+            let time = Date.now() * 0.001;
+            for (let i = 0; i < 12; i++) {
+                let x = mx - 30 + Math.sin(i * 0.8 + time) * 40 + Math.sin(i * 1.2 + time * 0.7) * 20;
+                let y = my - 80 - i * 15 - Math.sin(time + i * 0.5) * 8;
+                let r = 10 + i * 3 + Math.sin(time + i) * 4;
+                let alpha = 0.15 - i * 0.012;
+                if (alpha < 0) alpha = 0;
+                ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // ========== НАДПИСЬ ==========
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText('🍖 ШАШЛЫК 🍖', W / 2, H - 15);
         }
 
-        // ============================================================
-        //  ОБРАБОТЧИК КЛИКОВ
-        // ============================================================
+        // ========== ФУНКЦИЯ РИСОВАНИЯ ШАШЛЫКА ==========
+        function drawShashlik(x, y, offset) {
+            ctx.shadowBlur = 0;
 
-        function handleClick(e) {
-            const rect = canvas.getBoundingClientRect();
+            // Шампур (палочка)
+            ctx.strokeStyle = '#8B7355';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(x - 5, y + 50);
+            ctx.lineTo(x + 5, y - 10);
+            ctx.stroke();
 
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-                e.preventDefault();
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
+            // Ручка шампура
+            ctx.fillStyle = '#A0826A';
+            ctx.fillRect(x - 7, y + 45, 14, 8);
+            ctx.fillStyle = '#8B7355';
+            ctx.fillRect(x - 5, y + 43, 10, 4);
+
+            // Мясо (кусочки)
+            const meatColors = ['#8B3A1A', '#A0522D', '#7A2E0A', '#9B4A2A', '#6B2A0A'];
+            const positions = [0, 1, 2, 3, 4];
+            const yOffsets = [5, 14, 23, 32, 41];
+
+            for (let i = 0; i < positions.length; i++) {
+                let px = x + Math.sin(i * 1.2 + offset * 2) * 8;
+                let py = y + yOffsets[i];
+                let size = 8 + Math.sin(i * 0.5 + offset) * 2;
+
+                // Тень кусочка
+                ctx.shadowColor = 'rgba(0,0,0,0.1)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetY = 2;
+
+                // Мясо
+                let color = meatColors[i % meatColors.length];
+                let grad = ctx.createRadialGradient(px - 2, py - 2, 2, px, py, size);
+                grad.addColorStop(0, lightenColor(color, 30));
+                grad.addColorStop(0.5, color);
+                grad.addColorStop(1, darkenColor(color, 30));
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.ellipse(px, py, size, size * 0.8, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Прожилки (детали мяса)
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = 'rgba(40, 20, 5, 0.2)';
+                ctx.lineWidth = 1;
+                for (let j = 0; j < 2; j++) {
+                    let angle = Math.random() * Math.PI * 2;
+                    let dx = Math.cos(angle) * size * 0.5;
+                    let dy = Math.sin(angle) * size * 0.4;
+                    ctx.beginPath();
+                    ctx.moveTo(px + dx * 0.3, py + dy * 0.3);
+                    ctx.lineTo(px + dx * 0.8, py + dy * 0.8);
+                    ctx.stroke();
+                }
+
+                // Блик на мясе
+                ctx.fillStyle = 'rgba(255,200,150,0.1)';
+                ctx.beginPath();
+                ctx.ellipse(px - 2, py - 3, size * 0.3, size * 0.2, -0.5, 0, Math.PI * 2);
+                ctx.fill();
             }
 
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            const mouseX = (clientX - rect.left) * scaleX;
-            const mouseY = (clientY - rect.top) * scaleY;
-
-            const CY = (H / 2) + offsetY;
-            const dx = mouseX - CX;
-            const dy = mouseY - CY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist <= R * 1.2) {
-                isPressed = true;
-                pressTimer = 0;
-                targetOffsetY = 15;
-
-                canvas.style.transition = 'transform 0.05s';
-                canvas.style.transform = 'translate(' + (Math.random() * 4 - 2) + 'px, ' + (Math.random() * 4 - 2) + 'px)';
-                setTimeout(() => {
-                    canvas.style.transform = 'translate(0,0)';
-                }, 80);
-
-                console.log('Кнопка нажата!');
-            }
+            // Кончик шампура (остриё)
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#A0826A';
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y - 10);
+            ctx.lineTo(x + 8, y - 16);
+            ctx.lineTo(x + 2, y - 10);
+            ctx.fill();
         }
 
-        // ============================================================
-        //  ЗАПУСК
-        // ============================================================
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
-        canvas.addEventListener('click', handleClick);
-        canvas.addEventListener('touchstart', handleClick, { passive: false });
+        function drawCloud(x, y, s) {
+            ctx.beginPath();
+            ctx.arc(x, y, s * 0.6, 0, Math.PI * 2);
+            ctx.arc(x + s * 0.6, y - s * 0.2, s * 0.5, 0, Math.PI * 2);
+            ctx.arc(x + s * 1.2, y, s * 0.5, 0, Math.PI * 2);
+            ctx.arc(x + s * 0.7, y + s * 0.2, s * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
+        function lightenColor(color, amount) {
+            let r = parseInt(color.slice(1, 3), 16);
+            let g = parseInt(color.slice(3, 5), 16);
+            let b = parseInt(color.slice(5, 7), 16);
+            r = Math.min(255, r + amount);
+            g = Math.min(255, g + amount);
+            b = Math.min(255, b + amount);
+            return `rgb(${r},${g},${b})`;
+        }
+
+        function darkenColor(color, amount) {
+            let r = parseInt(color.slice(1, 3), 16);
+            let g = parseInt(color.slice(3, 5), 16);
+            let b = parseInt(color.slice(5, 7), 16);
+            r = Math.max(0, r - amount);
+            g = Math.max(0, g - amount);
+            b = Math.max(0, b - amount);
+            return `rgb(${r},${g},${b})`;
+        }
+
+        // ========== ПОЛИФИЛ ДЛЯ ROUNDRECT ==========
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                if (r > w / 2) r = w / 2;
+                if (r > h / 2) r = h / 2;
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                return this;
+            };
+        }
+
+        // ========== ЗАПУСК ==========
         function loop() {
             draw();
             requestAnimationFrame(loop);
@@ -353,7 +339,7 @@
 
         loop();
 
-        console.log('Кнопка-шар с нормальной текстурой!');
+        console.log('Мангал с шашлыком! 🍖');
     </script>
 </body>
 </html>
