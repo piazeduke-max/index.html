@@ -40,10 +40,7 @@
         const H = 700;
         const GROUND = 580;
 
-        let time = 0;
-
         function draw() {
-            time += 0.03;
             ctx.clearRect(0, 0, W, H);
 
             // ========== НЕБО ==========
@@ -145,7 +142,7 @@
             ctx.roundRect(mx - 112 * scale, my - 38 * scale, 224 * scale, 14 * scale, 4 * scale);
             ctx.fill();
 
-            // ========== УГЛИ (ВНУТРИ) ==========
+            // ---- УГЛИ ----
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#1A0505';
             ctx.beginPath();
@@ -157,87 +154,21 @@
                 let x = mx - 85 * scale + Math.random() * 170 * scale;
                 let y = my - 6 * scale + Math.random() * 22 * scale;
                 let r = 3 * scale + Math.random() * 7 * scale;
-                let red = 30 + Math.random() * 80;
-                let green = 5 + Math.random() * 15;
+                let red = 20 + Math.random() * 50;
+                let green = 5 + Math.random() * 10;
                 ctx.fillStyle = `rgb(${red}, ${green}, 0)`;
                 ctx.beginPath();
                 ctx.arc(x, y, r, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // ========== ОГОНЬ ВНУТРИ МАНГАЛА (ЯЗЫКИ ПЛАМЕНИ) ==========
-
-            // ---- СВЕЧЕНИЕ ----
-            let glowGrad = ctx.createRadialGradient(mx, my - 10 * scale, 10 * scale, mx, my - 10 * scale, 120 * scale);
-            glowGrad.addColorStop(0, `rgba(255, 180, 50, ${0.15 + Math.sin(time * 0.5) * 0.05})`);
-            glowGrad.addColorStop(0.4, `rgba(255, 120, 30, ${0.08 + Math.sin(time * 0.3 + 0.5) * 0.03})`);
-            glowGrad.addColorStop(0.7, `rgba(200, 80, 20, ${0.04 + Math.sin(time * 0.2 + 1) * 0.02})`);
-            glowGrad.addColorStop(1, 'rgba(100, 30, 0, 0)');
-            ctx.fillStyle = glowGrad;
-            ctx.beginPath();
-            ctx.arc(mx, my - 10 * scale, 120 * scale, 0, Math.PI * 2);
-            ctx.fill();
-
-            // ---- РИСУЕМ ЯЗЫКИ ПЛАМЕНИ (похоже на настоящий огонь) ----
-            for (let i = 0; i < 10; i++) {
-                let x = mx - 50 * scale + i * 11 * scale + Math.sin(i * 0.5 + time * 0.8) * 6 * scale;
-                let y = my - 4 * scale - Math.sin(i * 0.4 + time * 0.9) * 8 * scale;
-
-                // Размер пламени
-                let height = (25 + Math.sin(i * 0.7 + time * 1.1) * 12 + Math.sin(i * 1.5 + time * 0.6) * 6) * scale;
-                let width = (8 + Math.sin(i * 0.5 + time * 0.7) * 3 + Math.sin(i * 1.3 + time * 0.4) * 2) * scale;
-
-                // ВНЕШНИЙ СЛОЙ (тёмно-красный)
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = `rgba(200, 30, 0, ${0.2 + Math.sin(time * 0.5 + i) * 0.05})`;
-                drawFlameShape(x, y - height * 0.15, width * 1.1, height * 0.8);
-
-                // СРЕДНИЙ СЛОЙ (оранжевый)
-                ctx.fillStyle = `rgba(255, 120, 20, ${0.3 + Math.sin(time * 0.7 + i * 0.5) * 0.1})`;
-                drawFlameShape(x, y - height * 0.25, width * 0.85, height * 0.75);
-
-                // ВНУТРЕННИЙ СЛОЙ (жёлтый)
-                ctx.fillStyle = `rgba(255, 200, 50, ${0.4 + Math.sin(time * 0.9 + i * 0.3) * 0.12})`;
-                drawFlameShape(x, y - height * 0.35, width * 0.6, height * 0.65);
-
-                // ЯДРО (бело-жёлтое)
-                ctx.fillStyle = `rgba(255, 255, 200, ${0.5 + Math.sin(time * 1.2 + i * 0.2) * 0.15})`;
-                drawFlameShape(x, y - height * 0.45, width * 0.35, height * 0.5);
-
-                // ВЕРХУШКА (яркий язычок)
-                ctx.fillStyle = `rgba(255, 255, 220, ${0.3 + Math.sin(time * 1.5 + i * 0.7) * 0.1})`;
-                drawFlameTip(x, y - height * 0.7, width * 0.2, height * 0.35);
-            }
-
-            // ---- БОЛЬШИЕ ЯЗЫКИ ПЛАМЕНИ (по краям) ----
-            for (let i = 0; i < 4; i++) {
-                let x = mx - 40 * scale + i * 26 * scale + Math.sin(i * 0.8 + time * 0.6) * 4 * scale;
-                let y = my - 6 * scale - Math.sin(i * 0.6 + time * 0.7) * 6 * scale;
-                let height = (30 + Math.sin(i * 0.5 + time * 0.9) * 10) * scale;
-                let width = (10 + Math.sin(i * 0.4 + time * 0.5) * 3) * scale;
-
-                ctx.fillStyle = `rgba(255, 150, 30, ${0.15 + Math.sin(time * 0.6 + i * 0.4) * 0.05})`;
-                drawFlameShape(x, y - height * 0.15, width * 1.0, height * 0.7);
-
-                ctx.fillStyle = `rgba(255, 220, 80, ${0.2 + Math.sin(time * 0.8 + i * 0.3) * 0.08})`;
-                drawFlameShape(x, y - height * 0.3, width * 0.7, height * 0.6);
-
-                ctx.fillStyle = `rgba(255, 255, 200, ${0.25 + Math.sin(time * 1.0 + i * 0.2) * 0.1})`;
-                drawFlameTip(x, y - height * 0.55, width * 0.3, height * 0.4);
-            }
-
-            // ---- ИСКРЫ ----
-            ctx.shadowBlur = 0;
-            for (let i = 0; i < 30; i++) {
-                let x = mx - 65 * scale + Math.random() * 130 * scale;
-                let y = my - 10 * scale - Math.random() * 40 * scale;
-                let r = 1.5 * scale + Math.random() * 4 * scale;
-                let alpha = 0.2 + Math.random() * 0.6;
-                let flicker = Math.sin(time * 2.5 + i * 2.1) * 0.3 + 0.7;
-                let color = Math.random() > 0.5 ? '255, 220, 100' : '255, 180, 50';
-                ctx.fillStyle = `rgba(${color}, ${alpha * flicker})`;
-                ctx.shadowColor = `rgba(255, 200, 50, ${alpha * 0.15 * flicker})`;
-                ctx.shadowBlur = 12 * scale;
+            // ---- ТЛЕЮЩИЕ УГЛИ (красные точки) ----
+            for (let i = 0; i < 20; i++) {
+                let x = mx - 70 * scale + Math.random() * 140 * scale;
+                let y = my - 4 * scale + Math.random() * 16 * scale;
+                let r = 1.5 * scale + Math.random() * 3 * scale;
+                let red = 150 + Math.random() * 105;
+                ctx.fillStyle = `rgba(${red}, ${30 + Math.random() * 40}, 0, ${0.3 + Math.random() * 0.5})`;
                 ctx.beginPath();
                 ctx.arc(x, y, r, 0, Math.PI * 2);
                 ctx.fill();
@@ -250,21 +181,6 @@
             drawShashlik(mx + 10 * scale, my - 100 * scale, 1, scale);
             drawShashlik(mx + 70 * scale, my - 90 * scale, 2, scale);
 
-            // ========== ДЫМ ==========
-            ctx.shadowBlur = 0;
-            for (let i = 0; i < 20; i++) {
-                let x = mx - 40 * scale + Math.sin(i * 0.6 + time * 0.8) * 60 * scale + Math.sin(i * 1.0 + time * 0.5) * 30 *
-                scale;
-                let y = my - 110 * scale - i * 20 * scale - Math.sin(time + i * 0.4) * 12 * scale;
-                let r = 15 * scale + i * 4 * scale + Math.sin(time + i) * 6 * scale;
-                let alpha = 0.15 - i * 0.007;
-                if (alpha < 0) alpha = 0;
-                ctx.fillStyle = `rgba(220, 220, 220, ${alpha})`;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
             // ========== НАДПИСЬ ==========
             ctx.shadowBlur = 0;
             ctx.fillStyle = 'rgba(255,255,255,0.12)';
@@ -272,34 +188,6 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
             ctx.fillText('🍖 ШАШЛЫК 🍖', W / 2, H - 12);
-        }
-
-        // ========== ФУНКЦИЯ РИСОВАНИЯ ФОРМЫ ПЛАМЕНИ ==========
-        function drawFlameShape(x, y, w, h) {
-            ctx.beginPath();
-            ctx.moveTo(x - w * 0.6, y + h * 0.4);
-            ctx.quadraticCurveTo(x - w * 0.8, y + h * 0.1, x - w * 0.5, y - h * 0.1);
-            ctx.quadraticCurveTo(x - w * 0.7, y - h * 0.3, x - w * 0.4, y - h * 0.5);
-            ctx.quadraticCurveTo(x - w * 0.5, y - h * 0.7, x - w * 0.2, y - h * 0.8);
-            ctx.quadraticCurveTo(x, y - h, x + w * 0.2, y - h * 0.8);
-            ctx.quadraticCurveTo(x + w * 0.5, y - h * 0.7, x + w * 0.4, y - h * 0.5);
-            ctx.quadraticCurveTo(x + w * 0.7, y - h * 0.3, x + w * 0.5, y - h * 0.1);
-            ctx.quadraticCurveTo(x + w * 0.8, y + h * 0.1, x + w * 0.6, y + h * 0.4);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        // ========== ФУНКЦИЯ РИСОВАНИЯ ВЕРХУШКИ ПЛАМЕНИ ==========
-        function drawFlameTip(x, y, w, h) {
-            ctx.beginPath();
-            ctx.moveTo(x - w * 0.7, y + h * 0.3);
-            ctx.quadraticCurveTo(x - w * 0.9, y, x - w * 0.6, y - h * 0.2);
-            ctx.quadraticCurveTo(x - w * 0.8, y - h * 0.5, x - w * 0.4, y - h * 0.7);
-            ctx.quadraticCurveTo(x, y - h * 0.9, x + w * 0.4, y - h * 0.7);
-            ctx.quadraticCurveTo(x + w * 0.8, y - h * 0.5, x + w * 0.6, y - h * 0.2);
-            ctx.quadraticCurveTo(x + w * 0.9, y, x + w * 0.7, y + h * 0.3);
-            ctx.closePath();
-            ctx.fill();
         }
 
         // ========== ФУНКЦИЯ РИСОВАНИЯ ШАШЛЫКА ==========
@@ -434,7 +322,7 @@
 
         loop();
 
-        console.log('Мангал с шашлыком и настоящим огнём! 🍖🔥');
+        console.log('Мангал с шашлыком без огня! 🍖');
     </script>
 </body>
 </html>
