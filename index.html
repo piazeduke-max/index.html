@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мангал с шашлыком</title>
+    <title>Мангал с шашлыком - Крути!</title>
     <style>
         * {
             margin: 0;
@@ -17,6 +17,7 @@
             height: 100vh;
             background: #1a1a2e;
             overflow: hidden;
+            font-family: Arial, sans-serif;
         }
         canvas {
             border: 3px solid #333;
@@ -25,12 +26,31 @@
             width: auto;
             height: 96vh;
             aspect-ratio: 400 / 700;
+            cursor: pointer;
+        }
+        .hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            user-select: none;
+            pointer-events: none;
+        }
+        .hint span {
+            color: #FFD93D;
         }
     </style>
 </head>
 <body>
 
     <canvas id="game" width="400" height="700"></canvas>
+    <div class="hint">🔄 Клик на шашлык — <span>крутится</span>!</div>
 
     <script>
         const canvas = document.getElementById('game');
@@ -39,6 +59,13 @@
         const W = 400;
         const H = 700;
         const GROUND = 600;
+
+        // ========== СОСТОЯНИЕ ШАШЛЫКОВ ==========
+        // У каждого шашлыка свой угол поворота
+        let rotations = [0, 0, 0, 0]; // 4 шашлыка
+        let targetRotations = [0, 0, 0, 0];
+        let isSpinning = [false, false, false, false];
+        let spinTimers = [0, 0, 0, 0];
 
         function draw() {
             ctx.clearRect(0, 0, W, H);
@@ -102,24 +129,20 @@
                 ctx.stroke();
             }
 
-            // ========== МАНГАЛ ВДОЛЬ (ГОРИЗОНТАЛЬНЫЙ) ==========
+            // ========== МАНГАЛ ВДОЛЬ ==========
             const mx = W / 2;
             const my = GROUND - 15;
 
-            // ---- НОЖКИ (4 ножки по углам) ----
+            // ---- НОЖКИ ----
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#3A3A3A';
-            // Левая передняя
             ctx.fillRect(mx - 140, my + 8, 10, 45);
-            // Правая передняя
             ctx.fillRect(mx + 130, my + 8, 10, 45);
-            // Левая задняя
             ctx.fillStyle = '#2A2A2A';
             ctx.fillRect(mx - 120, my + 12, 8, 38);
-            // Правая задняя
             ctx.fillRect(mx + 112, my + 12, 8, 38);
 
-            // ---- КОРПУС МАНГАЛА (основание) ----
+            // ---- КОРПУС ----
             ctx.shadowColor = 'rgba(0,0,0,0.3)';
             ctx.shadowBlur = 15;
             ctx.shadowOffsetY = 5;
@@ -145,21 +168,36 @@
             ctx.roundRect(mx - 142, my - 36, 284, 12, 3);
             ctx.fill();
 
-            // ---- ВНУТРЕННЯЯ ЧАСТЬ (пустота) ----
-            // Ничего не рисуем
-
             ctx.shadowBlur = 0;
 
-            // ========== ШАШЛЫКИ (вдоль мангала) ==========
+            // ========== ШАШЛЫКИ С ВРАЩЕНИЕМ ==========
 
-            // Шашлык 1 (левый)
-            drawShashlik(mx - 80, my - 85, 0);
-            // Шашлык 2 (центр-левый)
-            drawShashlik(mx - 30, my - 92, 1);
-            // Шашлык 3 (центр-правый)
-            drawShashlik(mx + 30, my - 92, 2);
-            // Шашлык 4 (правый)
-            drawShashlik(mx + 80, my - 85, 3);
+            // Плавное вращение
+            for (let i = 0; i < 4; i++) {
+                rotations[i] += (targetRotations[i] - rotations[i]) * 0.1;
+
+                // Если крутимся, добавляем инерцию
+                if (isSpinning[i]) {
+                    targetRotations[i] += 0.15;
+                    spinTimers[i]++;
+                    if (spinTimers[i] > 30) {
+                        isSpinning[i] = false;
+                        spinTimers[i] = 0;
+                    }
+                }
+            }
+
+            // Позиции шашлыков
+            const positions = [
+                { x: mx - 80, y: my - 85 },
+                { x: mx - 30, y: my - 92 },
+                { x: mx + 30, y: my - 92 },
+                { x: mx + 80, y: my - 85 }
+            ];
+
+            for (let i = 0; i < 4; i++) {
+                drawShashlik(positions[i].x, positions[i].y, i, rotations[i]);
+            }
 
             // ========== НАДПИСЬ ==========
             ctx.shadowBlur = 0;
@@ -167,12 +205,22 @@
             ctx.font = '18px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
-            ctx.fillText('🍖 ШАШЛЫК 🍖', W / 2, H - 12);
+            ctx.fillText('🍖 КРУТИ ШАШЛЫК 🍖', W / 2, H - 12);
         }
 
-        // ========== ФУНКЦИЯ РИСОВАНИЯ ШАШЛЫКА ==========
-        function drawShashlik(x, y, offset) {
+        // ========== ФУНКЦИЯ РИСОВАНИЯ ШАШЛЫКА С ПОВОРОТОМ ==========
+        function drawShashlik(x, y, index, angle) {
             ctx.shadowBlur = 0;
+
+            // Сохраняем состояние и поворачиваем
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Поворот вокруг центра шашлыка
+            ctx.rotate(angle);
+
+            // Смещаем обратно, чтобы рисовать как обычно
+            ctx.translate(-x, -y);
 
             // Шампур
             ctx.strokeStyle = '#8B7355';
@@ -188,14 +236,24 @@
             ctx.fillStyle = '#8B7355';
             ctx.fillRect(x - 6, y + 45, 12, 5);
 
-            // Мясо
+            // Мясо (кусочки с поворотом)
             const meatColors = ['#8B3A1A', '#A0522D', '#7A2E0A', '#9B4A2A', '#6B2A0A', '#8B4A2A'];
             const yOffsets = [6, 14, 22, 30, 38, 46];
 
             for (let i = 0; i < yOffsets.length; i++) {
-                let px = x + Math.sin(i * 0.8 + offset * 1.2) * 8;
-                let py = y + yOffsets[i];
-                let size = 8 + Math.sin(i * 0.3 + offset) * 2;
+                // Смещение кусочков с учётом поворота
+                let offsetX = Math.sin(i * 0.8 + index * 1.2) * 8;
+                let offsetY = 0;
+
+                // При вращении кусочки немного смещаются
+                if (angle > 0.1) {
+                    offsetX += Math.sin(angle * 2 + i * 0.5) * 4;
+                    offsetY += Math.cos(angle * 2 + i * 0.5) * 3;
+                }
+
+                let px = x + offsetX;
+                let py = y + yOffsets[i] + offsetY;
+                let size = 8 + Math.sin(i * 0.3 + index) * 2;
 
                 ctx.shadowColor = 'rgba(0,0,0,0.15)';
                 ctx.shadowBlur = 5;
@@ -208,28 +266,31 @@
                 grad.addColorStop(1, darkenColor(color, 40));
                 ctx.fillStyle = grad;
                 ctx.beginPath();
-                ctx.ellipse(px, py, size, size * 0.8, 0, 0, Math.PI * 2);
+                ctx.ellipse(px, py, size, size * 0.8, angle * 0.3, 0, Math.PI * 2);
                 ctx.fill();
 
+                // Прожилки
                 ctx.shadowBlur = 0;
                 ctx.strokeStyle = 'rgba(40, 20, 5, 0.2)';
                 ctx.lineWidth = 1;
                 for (let j = 0; j < 2; j++) {
-                    let angle = Math.random() * Math.PI * 2;
-                    let dx = Math.cos(angle) * size * 0.5;
-                    let dy = Math.sin(angle) * size * 0.4;
+                    let a = Math.random() * Math.PI * 2 + angle * 0.2;
+                    let dx = Math.cos(a) * size * 0.5;
+                    let dy = Math.sin(a) * size * 0.4;
                     ctx.beginPath();
                     ctx.moveTo(px + dx * 0.2, py + dy * 0.2);
                     ctx.lineTo(px + dx * 0.7, py + dy * 0.7);
                     ctx.stroke();
                 }
 
+                // Блик
                 ctx.fillStyle = 'rgba(255,200,150,0.1)';
                 ctx.beginPath();
-                ctx.ellipse(px - 2, py - 3, size * 0.3, size * 0.2, -0.5, 0, Math.PI * 2);
+                ctx.ellipse(px - 2, py - 3, size * 0.3, size * 0.2, -0.5 + angle * 0.1, 0, Math.PI * 2);
                 ctx.fill();
             }
 
+            // Кончик
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#A0826A';
             ctx.beginPath();
@@ -237,6 +298,70 @@
             ctx.lineTo(x + 10, y - 18);
             ctx.lineTo(x + 2, y - 12);
             ctx.fill();
+
+            // Восстанавливаем состояние
+            ctx.restore();
+
+            // ========== ИНДИКАТОР ВРАЩЕНИЯ ==========
+            if (isSpinning[index]) {
+                ctx.fillStyle = `rgba(255, 200, 50, ${0.3 + Math.sin(Date.now() * 0.01) * 0.1})`;
+                ctx.beginPath();
+                ctx.arc(x, y - 30, 12 + Math.sin(Date.now() * 0.005) * 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // ========== ОБРАБОТЧИК КЛИКОВ ==========
+
+        function handleClick(e) {
+            const rect = canvas.getBoundingClientRect();
+
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const mouseX = (clientX - rect.left) * scaleX;
+            const mouseY = (clientY - rect.top) * scaleY;
+
+            // Проверяем попадание по каждому шашлыку
+            const positions = [
+                { x: W/2 - 80, y: GROUND - 85 - 15 },
+                { x: W/2 - 30, y: GROUND - 92 - 15 },
+                { x: W/2 + 30, y: GROUND - 92 - 15 },
+                { x: W/2 + 80, y: GROUND - 85 - 15 }
+            ];
+
+            for (let i = 0; i < positions.length; i++) {
+                const dx = mouseX - positions[i].x;
+                const dy = mouseY - positions[i].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 40) {
+                    // Запускаем вращение
+                    isSpinning[i] = true;
+                    spinTimers[i] = 0;
+                    targetRotations[i] += 1.5; // Добавляем полный оборот
+
+                    // Лёгкая вибрация
+                    canvas.style.transition = 'transform 0.05s';
+                    canvas.style.transform = 'translate(' + (Math.random() * 3 - 1.5) + 'px, ' + (Math.random() * 3 - 1.5) + 'px)';
+                    setTimeout(() => {
+                        canvas.style.transform = 'translate(0,0)';
+                    }, 80);
+
+                    console.log('Шашлык ' + (i+1) + ' крутится!');
+                    break;
+                }
+            }
         }
 
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
@@ -289,6 +414,10 @@
         }
 
         // ========== ЗАПУСК ==========
+
+        canvas.addEventListener('click', handleClick);
+        canvas.addEventListener('touchstart', handleClick, { passive: false });
+
         function loop() {
             draw();
             requestAnimationFrame(loop);
@@ -296,7 +425,8 @@
 
         loop();
 
-        console.log('Мангал вдоль (горизонтальный)! 🍖');
+        console.log('Крути шашлык! 🍖🔄');
+        console.log('Кликни на любой шашлык — он начнёт вращаться!');
     </script>
 </body>
 </html>
