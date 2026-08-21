@@ -142,18 +142,8 @@
             ctx.roundRect(mx - 112 * scale, my - 38 * scale, 224 * scale, 14 * scale, 4 * scale);
             ctx.fill();
 
-            // ---- ПУСТОТА ВНУТРИ (без углей) ----
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#1A1A1A';
-            ctx.beginPath();
-            ctx.ellipse(mx, my + 2 * scale, 100 * scale, 22 * scale, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // ---- ЛЁГКАЯ ТЕНЬ ВНУТРИ ----
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
-            ctx.beginPath();
-            ctx.ellipse(mx, my + 4 * scale, 80 * scale, 14 * scale, 0, 0, Math.PI * 2);
-            ctx.fill();
+            // ---- ВНУТРЕННЯЯ ЧАСТЬ (пустота) ----
+            // Ничего не рисуем! Просто оставляем пустым.
 
             ctx.shadowBlur = 0;
 
@@ -303,7 +293,7 @@
 
         loop();
 
-        console.log('Мангал с шашлыком без огня и углей! 🍖');
+        console.log('Мангал с шашлыком - пустота внутри! 🍖');
     </script>
 </body>
 </html>
