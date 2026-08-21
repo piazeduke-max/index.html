@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вращение отдельных шампуров</title>
+    <title>Вращение шампуров</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -13,81 +13,101 @@
             align-items: center;
             min-height: 100vh;
             overflow: hidden;
-        }
-
-        /* Контейнер для наложения слоев */
-        .bbq-container {
-            position: relative;
-            width: 800px;
-            height: 500px;
-        }
-
-        /* Фоновый мангал */
-        .mangal-bg {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        /* Отдельные шампуры */
-        .shampur {
-            position: absolute;
-            cursor: grab;
-            transition: transform 0.1s linear;
             user-select: none;
         }
 
-        .shampur:active {
+        .bbq-stage {
+            position: relative;
+            width: 90vw;
+            max-width: 900px;
+            aspect-ratio: 16 / 9;
+        }
+
+        /* Фоновое фото */
+        .bg-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Зоны шампуров */
+        .skewers-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .skewer-zone {
+            position: absolute;
+            height: 11%;
+            width: 85%;
+            left: 7%;
+            cursor: grab;
+            pointer-events: auto;
+            border-radius: 20px;
+        }
+
+        .skewer-zone:active {
             cursor: grabbing;
         }
 
-        /* Позиционирование каждого шампура (настраивается под твои картинки) */
-        #skewer1 { top: 10%; left: 5%; width: 90%; }
-        #skewer2 { top: 30%; left: 5%; width: 90%; }
-        #skewer3 { top: 50%; left: 5%; width: 90%; }
+        /* Позиции под 5 шампуров с фото */
+        #skewer-1 { top: 22%; transform: rotate(-10deg); }
+        #skewer-2 { top: 35%; transform: rotate(-10deg); }
+        #skewer-3 { top: 48%; transform: rotate(-10deg); }
+        #skewer-4 { top: 61%; transform: rotate(-10deg); }
+        #skewer-5 { top: 74%; transform: rotate(-10deg); }
     </style>
 </head>
 <body>
 
-    <div class="bbq-container">
-        <!-- Фон мангала без шампуров -->
-        <img src="mangal_empty.png" class="mangal-bg" alt="Мангал">
+    <div class="bbq-stage">
+        <!-- Поменяй 'shashlik.jpg' на имя твоего файла с картинкой -->
+        <img src="shashlik.jpg" alt="Мангал" class="bg-image">
 
-        /* Вырезанные PNG-картинки отдельных шампуров */
-        <img src="shampur1.png" class="shampur" id="skewer1" alt="Шампур 1">
-        <img src="shampur2.png" class="shampur" id="skewer2" alt="Шампур 2">
-        <img src="shampur3.png" class="shampur" id="skewer3" alt="Шампур 3">
+        <div class="skewers-layer">
+            <div class="skewer-zone" id="skewer-1"></div>
+            <div class="skewer-zone" id="skewer-2"></div>
+            <div class="skewer-zone" id="skewer-3"></div>
+            <div class="skewer-zone" id="skewer-4"></div>
+            <div class="skewer-zone" id="skewer-5"></div>
+        </div>
     </div>
 
     <script>
-        document.querySelectorAll('.shampur').forEach(skewer => {
+        document.querySelectorAll('.skewer-zone').forEach(skewer => {
             let isDragging = false;
-            let startX = 0;
+            let startY = 0;
             let currentRotation = 0;
 
-            const start = (clientX) => {
+            const start = (clientY) => {
                 isDragging = true;
-                startX = clientX;
+                startY = clientY;
             };
 
-            const move = (clientX) => {
+            const move = (clientY) => {
                 if (!isDragging) return;
-                const deltaX = clientX - startX;
-                currentRotation += deltaX * 0.8;
-                // Вращение конкретного шампура вокруг своей оси
-                skewer.style.transform = `rotate(${currentRotation}deg)`;
-                startX = clientX;
+                const deltaY = clientY - startY;
+                currentRotation += deltaY * 1.5;
+                
+                // Вращение отдельного шампура по оси X (создает объемный эффект)
+                const baseTransform = getComputedStyle(skewer).transform;
+                skewer.style.transform = `rotate(-10deg) rotateX(${currentRotation}deg)`;
+                startY = clientY;
             };
 
             const stop = () => { isDragging = false; };
 
-            skewer.addEventListener('mousedown', (e) => start(e.clientX));
-            window.addEventListener('mousemove', (e) => move(e.clientX));
+            skewer.addEventListener('mousedown', (e) => start(e.clientY));
+            window.addEventListener('mousemove', (e) => move(e.clientY));
             window.addEventListener('mouseup', stop);
 
-            skewer.addEventListener('touchstart', (e) => start(e.touches[0].clientX));
-            window.addEventListener('touchmove', (e) => move(e.touches[0].clientX));
+            skewer.addEventListener('touchstart', (e) => start(e.touches[0].clientY));
+            window.addEventListener('touchmove', (e) => move(e.touches[0].clientY));
             window.addEventListener('touchend', stop);
         });
     </script>
