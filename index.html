@@ -3,430 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мангал с шашлыком - Крути!</title>
+    <title>Сочный шашлык</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background: #1a1a2e;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            margin: 0;
         }
-        canvas {
-            border: 3px solid #333;
+        .card {
+            background-color: #ffffff;
             border-radius: 12px;
-            background: #87CEEB;
-            width: auto;
-            height: 96vh;
-            aspect-ratio: 400 / 700;
-            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
         }
-        .hint {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.4);
+        .card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .card-content {
+            padding: 20px;
+        }
+        .card h2 {
+            margin: 0 0 10px;
+            color: #333;
+        }
+        .card p {
+            color: #666;
             font-size: 14px;
-            background: rgba(0,0,0,0.3);
-            padding: 8px 20px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.05);
-            user-select: none;
-            pointer-events: none;
-        }
-        .hint span {
-            color: #FFD93D;
+            line-height: 1.5;
         }
     </style>
 </head>
 <body>
 
-    <canvas id="game" width="400" height="700"></canvas>
-    <div class="hint">🔄 Клик на шашлык — <span>крутится</span>!</div>
+    <div class="card">
+        <!-- Убедись, что имя файла картинки совпадает с src -->
+        <img src="shashlik.jpg" alt="Сочный шашлык на мангале">
+        <div class="card-content">
+            <h2>Сочный шашлык на мангале</h2>
+            <p>Аппетитные кусочки мяса, запеченные до золотистой корочки на углях.</p>
+        </div>
+    </div>
 
-    <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
-
-        const W = 400;
-        const H = 700;
-        const GROUND = 600;
-
-        // ========== СОСТОЯНИЕ ШАШЛЫКОВ ==========
-        // У каждого шашлыка свой угол поворота
-        let rotations = [0, 0, 0, 0]; // 4 шашлыка
-        let targetRotations = [0, 0, 0, 0];
-        let isSpinning = [false, false, false, false];
-        let spinTimers = [0, 0, 0, 0];
-
-        function draw() {
-            ctx.clearRect(0, 0, W, H);
-
-            // ========== НЕБО ==========
-            let g = ctx.createLinearGradient(0, 0, 0, GROUND);
-            g.addColorStop(0, '#4A90D9');
-            g.addColorStop(0.5, '#87CEEB');
-            g.addColorStop(1, '#B5E8F7');
-            ctx.fillStyle = g;
-            ctx.fillRect(0, 0, W, GROUND);
-
-            // ========== СОЛНЦЕ ==========
-            ctx.shadowColor = '#FFE066';
-            ctx.shadowBlur = 60;
-            ctx.beginPath();
-            ctx.arc(340, 70, 35, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFF9E6';
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.beginPath();
-            ctx.arc(332, 60, 8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            ctx.fill();
-
-            // ========== ОБЛАКА ==========
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255,255,255,0.5)';
-            drawCloud(60, 80, 40);
-            drawCloud(200, 55, 35);
-            drawCloud(320, 100, 38);
-            drawCloud(30, 140, 25);
-            drawCloud(360, 50, 28);
-
-            // ========== ЗЕМЛЯ ==========
-            let g2 = ctx.createLinearGradient(0, GROUND, 0, H);
-            g2.addColorStop(0, '#66BB6A');
-            g2.addColorStop(0.3, '#4CAF50');
-            g2.addColorStop(0.7, '#388E3C');
-            g2.addColorStop(1, '#1B5E20');
-            ctx.fillStyle = g2;
-            ctx.fillRect(0, GROUND, W, H - GROUND);
-
-            // ========== ТРАВА ==========
-            ctx.strokeStyle = '#388E3C';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < W; i += 6) {
-                let h = 5 + Math.sin(i * 0.2 + 0.5) * 4;
-                ctx.beginPath();
-                ctx.moveTo(i, GROUND);
-                ctx.lineTo(i + 1.5, GROUND - h);
-                ctx.stroke();
-            }
-            ctx.strokeStyle = '#2E7D32';
-            ctx.lineWidth = 1.5;
-            for (let i = 3; i < W; i += 8) {
-                let h = 3 + Math.sin(i * 0.25 + 2.0) * 3;
-                ctx.beginPath();
-                ctx.moveTo(i, GROUND);
-                ctx.lineTo(i + 1, GROUND - h);
-                ctx.stroke();
-            }
-
-            // ========== МАНГАЛ ВДОЛЬ ==========
-            const mx = W / 2;
-            const my = GROUND - 15;
-
-            // ---- НОЖКИ ----
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#3A3A3A';
-            ctx.fillRect(mx - 140, my + 8, 10, 45);
-            ctx.fillRect(mx + 130, my + 8, 10, 45);
-            ctx.fillStyle = '#2A2A2A';
-            ctx.fillRect(mx - 120, my + 12, 8, 38);
-            ctx.fillRect(mx + 112, my + 12, 8, 38);
-
-            // ---- КОРПУС ----
-            ctx.shadowColor = 'rgba(0,0,0,0.3)';
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetY = 5;
-            ctx.fillStyle = '#4A4A4A';
-            ctx.beginPath();
-            ctx.roundRect(mx - 150, my - 4, 300, 24, 5);
-            ctx.fill();
-
-            // ---- БОРТИК ПЕРЕДНИЙ ----
-            ctx.shadowBlur = 0;
-            let gradBorder = ctx.createLinearGradient(0, my - 28, 0, my);
-            gradBorder.addColorStop(0, '#6A6A6A');
-            gradBorder.addColorStop(0.5, '#5A5A5A');
-            gradBorder.addColorStop(1, '#4A4A4A');
-            ctx.fillStyle = gradBorder;
-            ctx.beginPath();
-            ctx.roundRect(mx - 150, my - 28, 300, 26, 5);
-            ctx.fill();
-
-            // ---- БОРТИК ЗАДНИЙ ----
-            ctx.fillStyle = '#3A3A3A';
-            ctx.beginPath();
-            ctx.roundRect(mx - 142, my - 36, 284, 12, 3);
-            ctx.fill();
-
-            ctx.shadowBlur = 0;
-
-            // ========== ШАШЛЫКИ С ВРАЩЕНИЕМ ==========
-
-            // Плавное вращение
-            for (let i = 0; i < 4; i++) {
-                rotations[i] += (targetRotations[i] - rotations[i]) * 0.1;
-
-                // Если крутимся, добавляем инерцию
-                if (isSpinning[i]) {
-                    targetRotations[i] += 0.15;
-                    spinTimers[i]++;
-                    if (spinTimers[i] > 30) {
-                        isSpinning[i] = false;
-                        spinTimers[i] = 0;
-                    }
-                }
-            }
-
-            // Позиции шашлыков
-            const positions = [
-                { x: mx - 80, y: my - 85 },
-                { x: mx - 30, y: my - 92 },
-                { x: mx + 30, y: my - 92 },
-                { x: mx + 80, y: my - 85 }
-            ];
-
-            for (let i = 0; i < 4; i++) {
-                drawShashlik(positions[i].x, positions[i].y, i, rotations[i]);
-            }
-
-            // ========== НАДПИСЬ ==========
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255,255,255,0.12)';
-            ctx.font = '18px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-            ctx.fillText('🍖 КРУТИ ШАШЛЫК 🍖', W / 2, H - 12);
-        }
-
-        // ========== ФУНКЦИЯ РИСОВАНИЯ ШАШЛЫКА С ПОВОРОТОМ ==========
-        function drawShashlik(x, y, index, angle) {
-            ctx.shadowBlur = 0;
-
-            // Сохраняем состояние и поворачиваем
-            ctx.save();
-            ctx.translate(x, y);
-
-            // Поворот вокруг центра шашлыка
-            ctx.rotate(angle);
-
-            // Смещаем обратно, чтобы рисовать как обычно
-            ctx.translate(-x, -y);
-
-            // Шампур
-            ctx.strokeStyle = '#8B7355';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(x - 6, y + 55);
-            ctx.lineTo(x + 6, y - 12);
-            ctx.stroke();
-
-            // Ручка
-            ctx.fillStyle = '#A0826A';
-            ctx.fillRect(x - 8, y + 48, 16, 10);
-            ctx.fillStyle = '#8B7355';
-            ctx.fillRect(x - 6, y + 45, 12, 5);
-
-            // Мясо (кусочки с поворотом)
-            const meatColors = ['#8B3A1A', '#A0522D', '#7A2E0A', '#9B4A2A', '#6B2A0A', '#8B4A2A'];
-            const yOffsets = [6, 14, 22, 30, 38, 46];
-
-            for (let i = 0; i < yOffsets.length; i++) {
-                // Смещение кусочков с учётом поворота
-                let offsetX = Math.sin(i * 0.8 + index * 1.2) * 8;
-                let offsetY = 0;
-
-                // При вращении кусочки немного смещаются
-                if (angle > 0.1) {
-                    offsetX += Math.sin(angle * 2 + i * 0.5) * 4;
-                    offsetY += Math.cos(angle * 2 + i * 0.5) * 3;
-                }
-
-                let px = x + offsetX;
-                let py = y + yOffsets[i] + offsetY;
-                let size = 8 + Math.sin(i * 0.3 + index) * 2;
-
-                ctx.shadowColor = 'rgba(0,0,0,0.15)';
-                ctx.shadowBlur = 5;
-                ctx.shadowOffsetY = 2;
-
-                let color = meatColors[i % meatColors.length];
-                let grad = ctx.createRadialGradient(px - 2, py - 2, 2, px, py, size);
-                grad.addColorStop(0, lightenColor(color, 40));
-                grad.addColorStop(0.5, color);
-                grad.addColorStop(1, darkenColor(color, 40));
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.ellipse(px, py, size, size * 0.8, angle * 0.3, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Прожилки
-                ctx.shadowBlur = 0;
-                ctx.strokeStyle = 'rgba(40, 20, 5, 0.2)';
-                ctx.lineWidth = 1;
-                for (let j = 0; j < 2; j++) {
-                    let a = Math.random() * Math.PI * 2 + angle * 0.2;
-                    let dx = Math.cos(a) * size * 0.5;
-                    let dy = Math.sin(a) * size * 0.4;
-                    ctx.beginPath();
-                    ctx.moveTo(px + dx * 0.2, py + dy * 0.2);
-                    ctx.lineTo(px + dx * 0.7, py + dy * 0.7);
-                    ctx.stroke();
-                }
-
-                // Блик
-                ctx.fillStyle = 'rgba(255,200,150,0.1)';
-                ctx.beginPath();
-                ctx.ellipse(px - 2, py - 3, size * 0.3, size * 0.2, -0.5 + angle * 0.1, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Кончик
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#A0826A';
-            ctx.beginPath();
-            ctx.moveTo(x + 5, y - 12);
-            ctx.lineTo(x + 10, y - 18);
-            ctx.lineTo(x + 2, y - 12);
-            ctx.fill();
-
-            // Восстанавливаем состояние
-            ctx.restore();
-
-            // ========== ИНДИКАТОР ВРАЩЕНИЯ ==========
-            if (isSpinning[index]) {
-                ctx.fillStyle = `rgba(255, 200, 50, ${0.3 + Math.sin(Date.now() * 0.01) * 0.1})`;
-                ctx.beginPath();
-                ctx.arc(x, y - 30, 12 + Math.sin(Date.now() * 0.005) * 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // ========== ОБРАБОТЧИК КЛИКОВ ==========
-
-        function handleClick(e) {
-            const rect = canvas.getBoundingClientRect();
-
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-                e.preventDefault();
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-
-            const mouseX = (clientX - rect.left) * scaleX;
-            const mouseY = (clientY - rect.top) * scaleY;
-
-            // Проверяем попадание по каждому шашлыку
-            const positions = [
-                { x: W/2 - 80, y: GROUND - 85 - 15 },
-                { x: W/2 - 30, y: GROUND - 92 - 15 },
-                { x: W/2 + 30, y: GROUND - 92 - 15 },
-                { x: W/2 + 80, y: GROUND - 85 - 15 }
-            ];
-
-            for (let i = 0; i < positions.length; i++) {
-                const dx = mouseX - positions[i].x;
-                const dy = mouseY - positions[i].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < 40) {
-                    // Запускаем вращение
-                    isSpinning[i] = true;
-                    spinTimers[i] = 0;
-                    targetRotations[i] += 1.5; // Добавляем полный оборот
-
-                    // Лёгкая вибрация
-                    canvas.style.transition = 'transform 0.05s';
-                    canvas.style.transform = 'translate(' + (Math.random() * 3 - 1.5) + 'px, ' + (Math.random() * 3 - 1.5) + 'px)';
-                    setTimeout(() => {
-                        canvas.style.transform = 'translate(0,0)';
-                    }, 80);
-
-                    console.log('Шашлык ' + (i+1) + ' крутится!');
-                    break;
-                }
-            }
-        }
-
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-
-        function drawCloud(x, y, s) {
-            ctx.beginPath();
-            ctx.arc(x, y, s * 0.6, 0, Math.PI * 2);
-            ctx.arc(x + s * 0.6, y - s * 0.2, s * 0.5, 0, Math.PI * 2);
-            ctx.arc(x + s * 1.2, y, s * 0.5, 0, Math.PI * 2);
-            ctx.arc(x + s * 0.7, y + s * 0.2, s * 0.4, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        function lightenColor(color, amount) {
-            let r = parseInt(color.slice(1, 3), 16);
-            let g = parseInt(color.slice(3, 5), 16);
-            let b = parseInt(color.slice(5, 7), 16);
-            r = Math.min(255, r + amount);
-            g = Math.min(255, g + amount);
-            b = Math.min(255, b + amount);
-            return `rgb(${r},${g},${b})`;
-        }
-
-        function darkenColor(color, amount) {
-            let r = parseInt(color.slice(1, 3), 16);
-            let g = parseInt(color.slice(3, 5), 16);
-            let b = parseInt(color.slice(5, 7), 16);
-            r = Math.max(0, r - amount);
-            g = Math.max(0, g - amount);
-            b = Math.max(0, b - amount);
-            return `rgb(${r},${g},${b})`;
-        }
-
-        // ========== ПОЛИФИЛ ДЛЯ ROUNDRECT ==========
-        if (!CanvasRenderingContext2D.prototype.roundRect) {
-            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-                if (r > w / 2) r = w / 2;
-                if (r > h / 2) r = h / 2;
-                this.moveTo(x + r, y);
-                this.lineTo(x + w - r, y);
-                this.quadraticCurveTo(x + w, y, x + w, y + r);
-                this.lineTo(x + w, y + h - r);
-                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-                this.lineTo(x + r, y + h);
-                this.quadraticCurveTo(x, y + h, x, y + h - r);
-                this.lineTo(x, y + r);
-                this.quadraticCurveTo(x, y, x + r, y);
-                return this;
-            };
-        }
-
-        // ========== ЗАПУСК ==========
-
-        canvas.addEventListener('click', handleClick);
-        canvas.addEventListener('touchstart', handleClick, { passive: false });
-
-        function loop() {
-            draw();
-            requestAnimationFrame(loop);
-        }
-
-        loop();
-
-        console.log('Крути шашлык! 🍖🔄');
-        console.log('Кликни на любой шашлык — он начнёт вращаться!');
-    </script>
 </body>
 </html>
