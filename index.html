@@ -142,37 +142,18 @@
             ctx.roundRect(mx - 112 * scale, my - 38 * scale, 224 * scale, 14 * scale, 4 * scale);
             ctx.fill();
 
-            // ---- УГЛИ ----
+            // ---- ПУСТОТА ВНУТРИ (без углей) ----
             ctx.shadowBlur = 0;
-            ctx.fillStyle = '#1A0505';
+            ctx.fillStyle = '#1A1A1A';
             ctx.beginPath();
             ctx.ellipse(mx, my + 2 * scale, 100 * scale, 22 * scale, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // ---- УГЛИ (ДЕТАЛИ) ----
-            for (let i = 0; i < 50; i++) {
-                let x = mx - 85 * scale + Math.random() * 170 * scale;
-                let y = my - 6 * scale + Math.random() * 22 * scale;
-                let r = 3 * scale + Math.random() * 7 * scale;
-                let red = 20 + Math.random() * 50;
-                let green = 5 + Math.random() * 10;
-                ctx.fillStyle = `rgb(${red}, ${green}, 0)`;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // ---- ТЛЕЮЩИЕ УГЛИ (красные точки) ----
-            for (let i = 0; i < 20; i++) {
-                let x = mx - 70 * scale + Math.random() * 140 * scale;
-                let y = my - 4 * scale + Math.random() * 16 * scale;
-                let r = 1.5 * scale + Math.random() * 3 * scale;
-                let red = 150 + Math.random() * 105;
-                ctx.fillStyle = `rgba(${red}, ${30 + Math.random() * 40}, 0, ${0.3 + Math.random() * 0.5})`;
-                ctx.beginPath();
-                ctx.arc(x, y, r, 0, Math.PI * 2);
-                ctx.fill();
-            }
+            // ---- ЛЁГКАЯ ТЕНЬ ВНУТРИ ----
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(mx, my + 4 * scale, 80 * scale, 14 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
 
             ctx.shadowBlur = 0;
 
@@ -322,7 +303,7 @@
 
         loop();
 
-        console.log('Мангал с шашлыком без огня! 🍖');
+        console.log('Мангал с шашлыком без огня и углей! 🍖');
     </script>
 </body>
 </html>
