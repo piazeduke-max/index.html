@@ -38,7 +38,7 @@
 
         const W = 400;
         const H = 700;
-        const GROUND = 580;
+        const GROUND = 600;
 
         function draw() {
             ctx.clearRect(0, 0, W, H);
@@ -102,55 +102,64 @@
                 ctx.stroke();
             }
 
-            // ========== МАНГАЛ ==========
+            // ========== МАНГАЛ ВДОЛЬ (ГОРИЗОНТАЛЬНЫЙ) ==========
             const mx = W / 2;
-            const my = GROUND - 20;
-            const scale = 1.6;
+            const my = GROUND - 15;
 
-            // ---- НОЖКИ ----
+            // ---- НОЖКИ (4 ножки по углам) ----
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#3A3A3A';
-            ctx.fillRect(mx - 110 * scale, my + 8 * scale, 12 * scale, 50 * scale);
-            ctx.fillRect(mx + 98 * scale, my + 8 * scale, 12 * scale, 50 * scale);
+            // Левая передняя
+            ctx.fillRect(mx - 140, my + 8, 10, 45);
+            // Правая передняя
+            ctx.fillRect(mx + 130, my + 8, 10, 45);
+            // Левая задняя
             ctx.fillStyle = '#2A2A2A';
-            ctx.fillRect(mx - 90 * scale, my + 12 * scale, 10 * scale, 40 * scale);
-            ctx.fillRect(mx + 80 * scale, my + 12 * scale, 10 * scale, 40 * scale);
+            ctx.fillRect(mx - 120, my + 12, 8, 38);
+            // Правая задняя
+            ctx.fillRect(mx + 112, my + 12, 8, 38);
 
-            // ---- КОРПУС ----
+            // ---- КОРПУС МАНГАЛА (основание) ----
             ctx.shadowColor = 'rgba(0,0,0,0.3)';
             ctx.shadowBlur = 15;
             ctx.shadowOffsetY = 5;
             ctx.fillStyle = '#4A4A4A';
             ctx.beginPath();
-            ctx.roundRect(mx - 120 * scale, my - 6 * scale, 240 * scale, 28 * scale, 6 * scale);
+            ctx.roundRect(mx - 150, my - 4, 300, 24, 5);
             ctx.fill();
 
             // ---- БОРТИК ПЕРЕДНИЙ ----
             ctx.shadowBlur = 0;
-            let gradBorder = ctx.createLinearGradient(0, my - 30 * scale, 0, my);
+            let gradBorder = ctx.createLinearGradient(0, my - 28, 0, my);
             gradBorder.addColorStop(0, '#6A6A6A');
             gradBorder.addColorStop(0.5, '#5A5A5A');
             gradBorder.addColorStop(1, '#4A4A4A');
             ctx.fillStyle = gradBorder;
             ctx.beginPath();
-            ctx.roundRect(mx - 120 * scale, my - 30 * scale, 240 * scale, 28 * scale, 6 * scale);
+            ctx.roundRect(mx - 150, my - 28, 300, 26, 5);
             ctx.fill();
 
             // ---- БОРТИК ЗАДНИЙ ----
             ctx.fillStyle = '#3A3A3A';
             ctx.beginPath();
-            ctx.roundRect(mx - 112 * scale, my - 38 * scale, 224 * scale, 14 * scale, 4 * scale);
+            ctx.roundRect(mx - 142, my - 36, 284, 12, 3);
             ctx.fill();
 
             // ---- ВНУТРЕННЯЯ ЧАСТЬ (пустота) ----
-            // Ничего не рисуем! Просто оставляем пустым.
+            // Ничего не рисуем
 
             ctx.shadowBlur = 0;
 
-            // ========== ШАШЛЫКИ ==========
-            drawShashlik(mx - 50 * scale, my - 90 * scale, 0, scale);
-            drawShashlik(mx + 10 * scale, my - 100 * scale, 1, scale);
-            drawShashlik(mx + 70 * scale, my - 90 * scale, 2, scale);
+            // ========== ШАШЛЫКИ (вдоль мангала) ==========
+
+            // Шашлык 1 (левый)
+            drawShashlik(mx - 80, my - 85, 0);
+            // Шашлык 2 (центр-левый)
+            drawShashlik(mx - 30, my - 92, 1);
+            // Шашлык 3 (центр-правый)
+            drawShashlik(mx + 30, my - 92, 2);
+            // Шашлык 4 (правый)
+            drawShashlik(mx + 80, my - 85, 3);
 
             // ========== НАДПИСЬ ==========
             ctx.shadowBlur = 0;
@@ -162,35 +171,38 @@
         }
 
         // ========== ФУНКЦИЯ РИСОВАНИЯ ШАШЛЫКА ==========
-        function drawShashlik(x, y, offset, scale) {
+        function drawShashlik(x, y, offset) {
             ctx.shadowBlur = 0;
 
+            // Шампур
             ctx.strokeStyle = '#8B7355';
-            ctx.lineWidth = 4 * scale;
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(x - 8 * scale, y + 70 * scale);
-            ctx.lineTo(x + 8 * scale, y - 15 * scale);
+            ctx.moveTo(x - 6, y + 55);
+            ctx.lineTo(x + 6, y - 12);
             ctx.stroke();
 
+            // Ручка
             ctx.fillStyle = '#A0826A';
-            ctx.fillRect(x - 10 * scale, y + 62 * scale, 20 * scale, 12 * scale);
+            ctx.fillRect(x - 8, y + 48, 16, 10);
             ctx.fillStyle = '#8B7355';
-            ctx.fillRect(x - 8 * scale, y + 58 * scale, 16 * scale, 6 * scale);
+            ctx.fillRect(x - 6, y + 45, 12, 5);
 
+            // Мясо
             const meatColors = ['#8B3A1A', '#A0522D', '#7A2E0A', '#9B4A2A', '#6B2A0A', '#8B4A2A'];
-            const yOffsets = [8, 18, 28, 38, 48, 58];
+            const yOffsets = [6, 14, 22, 30, 38, 46];
 
             for (let i = 0; i < yOffsets.length; i++) {
-                let px = x + Math.sin(i * 1.0 + offset * 1.5) * 12 * scale;
-                let py = y + yOffsets[i] * scale;
-                let size = 10 * scale + Math.sin(i * 0.4 + offset) * 3 * scale;
+                let px = x + Math.sin(i * 0.8 + offset * 1.2) * 8;
+                let py = y + yOffsets[i];
+                let size = 8 + Math.sin(i * 0.3 + offset) * 2;
 
                 ctx.shadowColor = 'rgba(0,0,0,0.15)';
-                ctx.shadowBlur = 6 * scale;
-                ctx.shadowOffsetY = 3 * scale;
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetY = 2;
 
                 let color = meatColors[i % meatColors.length];
-                let grad = ctx.createRadialGradient(px - 3 * scale, py - 3 * scale, 3 * scale, px, py, size);
+                let grad = ctx.createRadialGradient(px - 2, py - 2, 2, px, py, size);
                 grad.addColorStop(0, lightenColor(color, 40));
                 grad.addColorStop(0.5, color);
                 grad.addColorStop(1, darkenColor(color, 40));
@@ -200,39 +212,30 @@
                 ctx.fill();
 
                 ctx.shadowBlur = 0;
-                ctx.strokeStyle = 'rgba(40, 20, 5, 0.25)';
-                ctx.lineWidth = 1.5 * scale;
-                for (let j = 0; j < 3; j++) {
+                ctx.strokeStyle = 'rgba(40, 20, 5, 0.2)';
+                ctx.lineWidth = 1;
+                for (let j = 0; j < 2; j++) {
                     let angle = Math.random() * Math.PI * 2;
-                    let dx = Math.cos(angle) * size * 0.6;
-                    let dy = Math.sin(angle) * size * 0.5;
+                    let dx = Math.cos(angle) * size * 0.5;
+                    let dy = Math.sin(angle) * size * 0.4;
                     ctx.beginPath();
                     ctx.moveTo(px + dx * 0.2, py + dy * 0.2);
-                    ctx.lineTo(px + dx * 0.8, py + dy * 0.8);
+                    ctx.lineTo(px + dx * 0.7, py + dy * 0.7);
                     ctx.stroke();
                 }
 
-                ctx.fillStyle = 'rgba(255,200,150,0.12)';
+                ctx.fillStyle = 'rgba(255,200,150,0.1)';
                 ctx.beginPath();
-                ctx.ellipse(px - 3 * scale, py - 4 * scale, size * 0.3, size * 0.2, -0.5, 0, Math.PI * 2);
+                ctx.ellipse(px - 2, py - 3, size * 0.3, size * 0.2, -0.5, 0, Math.PI * 2);
                 ctx.fill();
-
-                ctx.fillStyle = 'rgba(255,220,180,0.08)';
-                for (let j = 0; j < 2; j++) {
-                    let fx = px + (Math.random() - 0.5) * size * 0.8;
-                    let fy = py + (Math.random() - 0.5) * size * 0.6;
-                    ctx.beginPath();
-                    ctx.arc(fx, fy, 2 * scale + Math.random() * 3 * scale, 0, Math.PI * 2);
-                    ctx.fill();
-                }
             }
 
             ctx.shadowBlur = 0;
             ctx.fillStyle = '#A0826A';
             ctx.beginPath();
-            ctx.moveTo(x + 6 * scale, y - 15 * scale);
-            ctx.lineTo(x + 12 * scale, y - 22 * scale);
-            ctx.lineTo(x + 2 * scale, y - 15 * scale);
+            ctx.moveTo(x + 5, y - 12);
+            ctx.lineTo(x + 10, y - 18);
+            ctx.lineTo(x + 2, y - 12);
             ctx.fill();
         }
 
@@ -293,7 +296,7 @@
 
         loop();
 
-        console.log('Мангал с шашлыком - пустота внутри! 🍖');
+        console.log('Мангал вдоль (горизонтальный)! 🍖');
     </script>
 </body>
 </html>
